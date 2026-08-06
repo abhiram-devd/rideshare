@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+/* ─── Design Tokens ───────────────────────────────────────────────────── */
+:root {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: #e2e8f0;
+  background-color: #020617;
+  /* slate-950 */
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* ─── Glassmorphism Components ───────────────────────────────────────── */
+
+/* Dark glass – primary usage (cards, panels, nav) */
+.glass {
+  background: rgba(15, 23, 42, 0.55);
+  /* slate-900 @ 55% */
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  /* slate-400 @ 8% */
+}
+
+/* Medium glass – form / sub-panel — NO white tint */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.70);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(148, 163, 184, 0.10);
+}
+
+/* Accent tinted glass – subtle emerald shimmer */
+.glass-accent {
+  background: rgba(16, 185, 129, 0.06);
+  /* emerald-500 @ 6% */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+/* Hover state helper */
+.glass-hover:hover {
+  background: rgba(30, 41, 59, 0.75);
+  border-color: rgba(148, 163, 184, 0.18);
+}
+
+/* ─── Form Inputs ─────────────────────────────────────────────────────── */
+.glass-input {
+  background: rgba(2, 6, 23, 0.60);
+  /* near-black transparent */
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  color: #e2e8f0;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: rgba(16, 185, 129, 0.6);
+  background: rgba(2, 6, 23, 0.80);
+}
+
+.glass-input:hover:not(:focus) {
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
+/* Native select & date/time picker colors */
+.glass-input option {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+select.glass-input,
+input[type="date"].glass-input,
+input[type="time"].glass-input {
+  color-scheme: dark;
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.18);
+  border-radius: 2px;
+}
+
+/* ─── Utility ─────────────────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #34d399, #0d9488);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
