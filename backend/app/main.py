@@ -34,8 +34,18 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     # Referrer policy
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    # Content Security Policy (Basic default for JSON APIs)
-    response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none';"
+    # Swagger UI (/docs, /redoc) loads assets from external CDNs — allow them
+    if request.url.path.startswith("/docs") or request.url.path.startswith("/redoc"):
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net; "
+            "img-src 'self' data: fastapi.tiangolo.com cdn.jsdelivr.net; "
+            "frame-ancestors 'none';"
+        )
+    else:
+        # Strict CSP for API routes
+        response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none';"
     return response
 
 # Global Exception Handler to avoid exposing stack traces

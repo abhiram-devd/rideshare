@@ -21,6 +21,7 @@ export const TripDetails: React.FC = () => {
         queryKey: ['trip', id],
         queryFn: () => apiClient.get<Trip>(`/trips/${id}`),
         enabled: !!id,
+        refetchInterval: 20000,
     });
 
     // 2. Fetch User's Outgoing Requests to check if user has already requested to join
@@ -42,6 +43,22 @@ export const TripDetails: React.FC = () => {
         },
         onError: (err: any) => {
             setErrorMsg(err?.detail || 'Failed to submit join request.');
+            setTimeout(() => setErrorMsg(null), 5000);
+        },
+    });
+
+    // Mutator for leaving a confirmed trip
+    const leaveTripMutation = useMutation({
+        mutationFn: () => apiClient.post(`/trips/${id}/leave`, {}),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['trip', id] });
+            queryClient.invalidateQueries({ queryKey: ['my-trips'] });
+            queryClient.invalidateQueries({ queryKey: ['outgoing-requests'] });
+            setSuccessMsg('You have left this trip.');
+            setTimeout(() => setSuccessMsg(null), 5000);
+        },
+        onError: (err: any) => {
+            setErrorMsg(err?.detail || 'Failed to leave trip.');
             setTimeout(() => setErrorMsg(null), 5000);
         },
     });
@@ -75,12 +92,14 @@ export const TripDetails: React.FC = () => {
     const isPassenger = confirmedMembers.some((m) => m.user_id === user?.id && m.role === 'MEMBER');
     const isConfirmed = isOwner || isPassenger;
 
+    const canLeave = isPassenger && trip.status !== 'CANCELLED' && trip.status !== 'COMPLETED';
+
     // Check if there is an active pending join request
     const existingPendingRequest = outgoingRequests.find(
         (req) => req.trip_id === trip.id && req.status === 'PENDING'
     );
 
-    const costSplit = (parseFloat(trip.estimated_total_cost) / confirmedMembers.length).toFixed(0);
+    const costSplit = (parseFloat(trip.estimated_total_cost) / trip.max_passengers).toFixed(0);
 
     const handleTripAction = async (action: 'cancel' | 'complete') => {
         if (!confirm(`Are you sure you want to ${action} this trip?`)) return;
@@ -129,6 +148,19 @@ export const TripDetails: React.FC = () => {
                             Complete
                         </button>
                     </div>
+                )}
+                {canLeave && (
+                    <button
+                        onClick={() => {
+                            if (confirm('Are you sure you want to leave this trip?')) {
+                                leaveTripMutation.mutate();
+                            }
+                        }}
+                        disabled={leaveTripMutation.isPending}
+                        className="px-2.5 py-1 text-[11px] font-bold border border-red-500/30 text-red-400 hover:bg-red-500/10 rounded"
+                    >
+                        {leaveTripMutation.isPending ? 'Leaving...' : 'Leave Trip'}
+                    </button>
                 )}
             </div>
 
