@@ -12,6 +12,7 @@ export const MyTrips: React.FC = () => {
     const { data: trips = [], isLoading } = useQuery<Trip[]>({
         queryKey: ['my-trips'],
         queryFn: () => apiClient.get<Trip[]>('/trips/my'),
+        refetchInterval: 20000,
     });
 
     const activeTrips = trips.filter((t) => t.status === 'OPEN' || t.status === 'FULL');
@@ -70,9 +71,9 @@ export const MyTrips: React.FC = () => {
                             >
                                 <div className="flex justify-between items-center mb-2">
                                     <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-full border ${trip.status === 'OPEN' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                            : trip.status === 'FULL' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                                                : trip.status === 'COMPLETED' ? 'bg-slate-800/60 text-slate-400 border-slate-700/40'
-                                                    : 'bg-red-500/10 text-red-400 border-red-500/20'
+                                        : trip.status === 'FULL' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                            : trip.status === 'COMPLETED' ? 'bg-slate-800/60 text-slate-400 border-slate-700/40'
+                                                : 'bg-red-500/10 text-red-400 border-red-500/20'
                                         }`}>
                                         {trip.status}
                                     </span>

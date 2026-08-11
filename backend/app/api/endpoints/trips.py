@@ -342,3 +342,77 @@ def complete_trip(
     ).filter(Trip.id == id).first()
     
     return trip
+
+
+@router.post("/{id}/leave", response_model=schemas.TripResponse)
+def leave_trip(
+    id: UUID,
+    current_user: User = Depends(deps.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Allow a confirmed MEMBER (not owner) to leave/withdraw from a trip.
+    - Removes their TripMember row
+    - Reopens trip status to OPEN if it was FULL
+    - Cancels any accepted JoinRequest for this user+trip
+    """
+    from app.models.models import JoinRequest
+
+    trip = db.query(Trip).filter(Trip.id == id).first()
+    if not trip:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Trip not found"
+        )
+
+    if trip.creator_id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Trip creator cannot leave their own trip. Cancel the trip instead."
+        )
+
+    if trip.status in ["CANCELLED", "COMPLETED"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot leave a cancelled or completed trip."
+        )
+
+    member = db.query(TripMember).filter(
+        TripMember.trip_id == id,
+        TripMember.user_id == current_user.id,
+        TripMember.status == "CONFIRMED"
+    ).first()
+
+    if not member:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You are not a confirmed member of this trip."
+        )
+
+    # Remove member
+    db.delete(member)
+
+    # If trip was FULL, reopen it
+    if trip.status == "FULL":
+        trip.status = "OPEN"
+
+    # Cancel related accepted join request if any
+    join_req = db.query(JoinRequest).filter(
+        JoinRequest.trip_id == id,
+        JoinRequest.requester_id == current_user.id,
+        JoinRequest.status == "ACCEPTED"
+    ).first()
+    if join_req:
+        join_req.status = "CANCELLED"
+
+    db.commit()
+
+    trip = db.query(Trip).options(
+        joinedload(Trip.creator),
+        joinedload(Trip.origin),
+        joinedload(Trip.destination),
+        joinedload(Trip.members).joinedload(TripMember.user)
+    ).filter(Trip.id == id).first()
+
+    return trip
+

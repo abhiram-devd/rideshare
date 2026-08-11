@@ -13,12 +13,14 @@ export const Requests: React.FC = () => {
     const { data: incoming = [], isLoading: loadingIn } = useQuery<JoinRequest[]>({
         queryKey: ['incoming-requests'],
         queryFn: () => apiClient.get<JoinRequest[]>('/requests/incoming'),
+        refetchInterval: 15000,
     });
 
     // Fetch Outgoing
     const { data: outgoing = [], isLoading: loadingOut } = useQuery<JoinRequest[]>({
         queryKey: ['outgoing-requests'],
         queryFn: () => apiClient.get<JoinRequest[]>('/requests/outgoing'),
+        refetchInterval: 15000,
     });
 
     const handleRequestAction = useMutation({

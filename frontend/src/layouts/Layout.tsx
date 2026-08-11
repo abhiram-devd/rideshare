@@ -1,11 +1,23 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Home, Calendar, Bell, User as UserIcon, LogOut } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
+import apiClient from '../api/client';
+import type { JoinRequest } from '../types';
 
 export const Layout: React.FC = () => {
     const { pathname } = useLocation();
     const { logout, user } = useAuth();
+
+    // Poll incoming requests every 15s to keep notification dot fresh
+    const { data: incomingRequests = [] } = useQuery<JoinRequest[]>({
+        queryKey: ['incoming-requests'],
+        queryFn: () => apiClient.get<JoinRequest[]>('/requests/incoming'),
+        enabled: !!user,
+        refetchInterval: 15000,
+    });
+    const pendingCount = incomingRequests.filter((r) => r.status === 'PENDING').length;
 
     const handleLogout = async () => {
         if (confirm('Are you sure you want to log out?')) {
@@ -92,8 +104,11 @@ export const Layout: React.FC = () => {
                             : 'text-slate-500 hover:text-slate-300'
                             }`}
                     >
-                        <div className={`p-1 rounded-lg transition-colors ${isActive('/requests') ? 'bg-emerald-500/12' : ''}`}>
+                        <div className={`relative p-1 rounded-lg transition-colors ${isActive('/requests') ? 'bg-emerald-500/12' : ''}`}>
                             <Bell size={20} className={isActive('/requests') ? 'stroke-[2.5px]' : 'stroke-[1.8px]'} />
+                            {pendingCount > 0 && (
+                                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-slate-950 animate-pulse" />
+                            )}
                         </div>
                         <span className="mt-0.5">Requests</span>
                     </Link>

@@ -1,0 +1,53 @@
+# All users
+docker exec ridemate-postgres psql -U postgres -d ridemate_dev -c "SELECT id, name, email, phone, email_verified, is_active, created_at FROM users;"
+
+# All trips
+docker exec ridemate-postgres psql -U postgres -d ridemate_dev -c "SELECT * FROM trips;"
+
+# Join requests
+docker exec ridemate-postgres psql -U postgres -d ridemate_dev -c "SELECT * FROM join_requests;"
+
+# Interactive psql shell (for \dt, \d tablename etc.)
+docker exec -it ridemate-postgres psql -U postgres -d ridemate_dev
+
+#See the hash (just to confirm it exists):
+docker exec ridemate-postgres psql -U postgres -d ridemate_dev -c "SELECT email, password_hash FROM users WHERE email='abhirammktp@gmail.com';"
+
+# Reset password for a user (replace hash with a new bcrypt hash of your desired password)
+docker exec ridemate-postgres psql -U postgres -d ridemate_dev -c "UPDATE users SET password_hash='new_bcrypt_hash_here', password_reset_hash=NULL, password_reset_expires_at=NULL WHERE email='abhirammktp@gmail.com';"
+
+
+
+# Reset a password (most practical option) — generate a new bcrypt hash and update it:
+# First, generate a bcrypt hash for your new password (e.g. "newpassword123")
+docker exec ridemate-postgres psql -U postgres -d ridemate_dev -c "
+UPDATE users 
+SET password_hash = '\$2b\$12\$yourbcrypthashhere' 
+WHERE email = 'abhirammktp@gmail.com';"
+
+
+Easiest way — use Python from your venv:
+
+cd /home/abhiram/Documents/ridemate/backend
+source .venv/bin/activate
+python3 -c "
+from passlib.context import CryptContext
+pwd = CryptContext(schemes=['bcrypt'])
+print(pwd.hash('your_new_password'))
+"
+
+
+
+3. Verify your existing password (check if it matches):
+python3 -c "
+from passlib.context import CryptContext
+pwd = CryptContext(schemes=['bcrypt'])
+hash = 'paste_hash_from_db_here'
+print(pwd.verify('your_password_to_test', hash))
+"
+
+# Generate correct Argon2 hash (what this app uses)
+HASH=$(/home/abhiram/Documents/ridemate/backend/.venv/bin/python3 -c "from argon2 import PasswordHasher; print(PasswordHasher().hash('your_password'))")
+
+# Update in DB
+docker exec ridemate-postgres psql -U postgres -d ridemate_dev -c "UPDATE users SET password_hash='$HASH' WHERE email='your@email.com';"
