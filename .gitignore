@@ -154,12 +154,13 @@ dist-ssr/
 *.sln
 *.sw?
 
-# Environment files
+# Environment files (secrets — never commit)
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+# .env.production is intentionally NOT ignored — it only contains the public API URL
 
 # Database data
 pgdata/
